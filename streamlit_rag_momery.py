@@ -55,8 +55,8 @@ def initialize_components(selected_model):
     qa_system_prompt = """You are an assistant for question-answering tasks. \
     Use the following pieces of retrieved context to answer the question. \
     If you don't know the answer, just say that you don't know. \
-    Keep the answer perfect. please use imogi with the answer.
-    대답은 한국어로 하고, 존댓말을 써줘.\
+    Keep the answer perfect. please use emoji with the answer.
+    대답은 한국어로 하고, 존댓말을 써줘.
 
     {context}"""
     qa_prompt = ChatPromptTemplate.from_messages(
@@ -108,6 +108,13 @@ if prompt_message := st.chat_input("무엇이든지 물어보세요!"):
             
             answer = response['answer']
             st.write(answer)
-            with st.expander("참고 문서 확인"):
-                for doc in response['context']:
-                    st.markdown(doc.metadata['source'], help=doc.page_content)
+            
+            # 헌법 관련 질문일 때만 참고 문서 표시
+            constitution_keywords = ['헌법', '기본권', '국민', '대통령', '국회', '법원', '정부', '조', '항', '권리', '의무']
+            if any(keyword in prompt_message for keyword in constitution_keywords) and response['context']:
+                st.write("**참고 문서:**")
+                for i, doc in enumerate(response['context'], 1):
+                    source = doc.metadata.get('source', '알 수 없음')
+                    page = doc.metadata.get('page', 0) + 1
+                    file_name = source.split('\\')[-1] if '\\' in source else source.split('/')[-1]
+                    st.markdown(f"📄 [{file_name}]({source}) - 페이지 {page}")
